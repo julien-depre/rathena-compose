@@ -53,6 +53,7 @@ services:
       traefik.tcp.routers.char.rule: "HostSNI(`*`)"
       traefik.tcp.routers.char.entrypoints: char
       traefik.tcp.services.char.loadbalancer.server.port: 6121
+
   map-server:
     image: ghcr.io/julien-depre/rathena-docker:map-server-latest
     environment:
@@ -115,6 +116,7 @@ services:
       traefik.enable: 'true'
       traefik.http.routers.fluxcp.entrypoints: websecure
       traefik.http.routers.fluxcp.rule: Host(`${DOMAIN}`)
+      traefik.http.routers.traefik.middlewares: iphome
       traefik.http.services.fluxcp.loadbalancer.server.port: 80
     
   traefik:
@@ -168,6 +170,7 @@ services:
       traefik.http.routers.traefik.middlewares: iphome
       traefik.http.middlewares.iphome.ipallowlist.sourcerange: "${ALLOWED_IPS}"
       traefik.http.services.mydashboard.loadbalancer.server.port: -1
+
 volumes:
   mariadb_data:
   letsencrypt-data:
