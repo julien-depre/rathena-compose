@@ -1,0 +1,173 @@
+---
+name: rathena
+
+
+services:
+  mariadb:
+    image: mariadb:lts
+    environment:
+      MYSQL_ROOT_PASSWORD: ragnarok
+      MYSQL_DATABASE: ragnarok
+      MYSQL_USER: ragnarok
+      MYSQL_PASSWORD: ragnarok
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  login-server:
+    image: ghcr.io/julien-depre/rathena-docker:login-server-latest
+    environment:
+      SET_MOTD: ${SET_MOTD}
+      DOMAIN: ${DOMAIN}
+      RATHENA_USR: ${RATHENA_USR}
+      RATHENA_PWD: ${RATHENA_PWD}
+      RATHENA_NAME: ${RATHENA_NAME}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    labels:
+      traefik.enable: 'true'
+      traefik.tcp.routers.login.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.login.entrypoints: login
+      traefik.tcp.services.login.loadbalancer.server.port: 6900
+  char-server:
+    image: ghcr.io/julien-depre/rathena-docker:char-server-latest
+    environment:
+      SET_MOTD: ${SET_MOTD}
+      DOMAIN: ${DOMAIN}
+      RATHENA_USR: ${RATHENA_USR}
+      RATHENA_PWD: ${RATHENA_PWD}
+      RATHENA_NAME: ${RATHENA_NAME}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      login-server:
+        condition: service_started
+    labels:
+      traefik.enable: 'true'
+      traefik.tcp.routers.char.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.char.entrypoints: char
+      traefik.tcp.services.char.loadbalancer.server.port: 6121
+  map-server:
+    image: ghcr.io/julien-depre/rathena-docker:map-server-latest
+    environment:
+      SET_MOTD: ${SET_MOTD}
+      DOMAIN: ${DOMAIN}
+      RATHENA_USR: ${RATHENA_USR}
+      RATHENA_PWD: ${RATHENA_PWD}
+      RATHENA_NAME: ${RATHENA_NAME}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      login-server:
+        condition: service_started
+      char-server:
+        condition: service_started
+    labels:
+      traefik.enable: 'true'
+      traefik.tcp.routers.map.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.map.entrypoints: map
+      traefik.tcp.services.map.loadbalancer.server.port: 5121
+
+  web-server:
+    image: ghcr.io/julien-depre/rathena-docker:web-server-latest
+    environment:
+      SET_MOTD: ${SET_MOTD}
+      DOMAIN: ${DOMAIN}
+      RATHENA_USR: ${RATHENA_USR}
+      RATHENA_PWD: ${RATHENA_PWD}
+      RATHENA_NAME: ${RATHENA_NAME}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      login-server:
+        condition: service_started
+      char-server:
+        condition: service_started
+    labels:
+      traefik.enable: 'true'
+      traefik.tcp.routers.gamecp.rule: "HostSNI(`*`)"
+      traefik.tcp.routers.gamecp.entrypoints: gamecp
+      traefik.tcp.services.gamecp.loadbalancer.server.port: 8888
+
+  fluxcp:
+    image: ghcr.io/julien-depre/fluxcp:latest
+    restart: unless-stopped
+    environment:
+      - DOMAIN=${DOMAIN}
+      - INSTALLER_PASSWORD=${INSTALLER_PASSWORD}
+      - RO_SERVER_NAME=${RO_SERVER_NAME}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      login-server:
+        condition: service_started
+      char-server:
+        condition: service_started
+      map-server:
+        condition: service_started
+    labels:
+      traefik.enable: 'true'
+      traefik.http.routers.fluxcp.entrypoints: websecure
+      traefik.http.routers.fluxcp.rule: Host(`fluxcp.${DOMAIN}`)
+      traefik.http.services.fluxcp.loadbalancer.server.port: 80
+    
+  traefik:
+    image: traefik:latest
+    attach: false
+    ports:
+      - "80:80"
+      - "443:443"
+      - "6900:6900"
+      - "6121:6121"
+      - "5121:5121"
+      - "8888:8888"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt-data:/letsencrypt/
+    command:
+      - --log.level=DEBUG
+      - --accesslog=true
+      - --api.dashboard=true
+      - --ping=true
+      - --metrics.prometheus=true
+      - --metrics.prometheus.addEntryPointsLabels=true
+      - --metrics.prometheus.addServicesLabels=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls.certResolver=myresolver
+      - --entrypoints.login.address=:6900
+      - --entrypoints.char.address=:6121
+      - --entrypoints.map.address=:5121
+      - --entrypoints.gamecp.address=:8888
+      - --certificatesresolvers.myresolver.acme.tlschallenge=true
+      - --certificatesresolvers.myresolver.acme.email=${USER}@${DOMAIN}
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+      # - --certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 1s
+      retries: 5
+    env_file:
+      - .env
+    labels:
+      traefik.enable: 'true'
+      traefik.http.routers.traefik.entrypoints: websecure
+      traefik.http.routers.traefik.rule: Host(`traefik.${DOMAIN}`)
+      traefik.http.routers.traefik.service: api@internal
+      traefik.http.routers.traefik.middlewares: iphome
+      traefik.http.middlewares.iphome.ipallowlist.sourcerange: "${ALLOWED_IPS}"
+      traefik.http.services.mydashboard.loadbalancer.server.port: -1
+volumes:
+  mariadb_data:
+  letsencrypt-data:
