@@ -28,7 +28,7 @@ reset: clean init
 # Initialize .env with defaults if missing
 init-env:
 	@echo "Initializing .env file..."
-	@bash ./scripts/init-env.sh
+	@./scripts/init-env.sh
 
 # Pull Docker images from registry
 build:
@@ -43,12 +43,12 @@ extract-sql:
 # Create final override SQL to update default account based on .env
 init-sql-override:
 	@echo "Generating SQL override ..."
-	@bash ./scripts/init-sql-override.sh
+	@./scripts/init-sql-override.sh
 
 # Initialize database with SQL files
 init-db:
 	@echo "Initializing database..."
-	@bash ./scripts/init-db.sh
+	@./scripts/init-db.sh
 
 # Start services (detached)
 up:
