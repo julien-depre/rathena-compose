@@ -9,7 +9,7 @@ cd "$PROJECT_ROOT"
 
 echo "[SQL Extract] Extracting SQL initialization files from rAthena image..."
 mkdir -p ./sql-init
-find ./sql-init/ -delete
+find ./sql-init/ -mindepth 1 -delete
 
 # Create a temporary container to extract SQL files
 echo "[SQL Extract] Creating temporary container..."
