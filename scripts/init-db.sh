@@ -42,3 +42,5 @@ rm -rf sql-init
 
 sleep 1
 docker compose down --remove-orphans
+
+echo "✅ Database initialization completed."
