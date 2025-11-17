@@ -131,7 +131,7 @@ services:
       - "8888:8888"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - letsencrypt-data:/letsencrypt/
+      - ./letsencrypt:/letsencrypt/
     command:
       - --log.level=DEBUG
       - --accesslog=true
@@ -173,4 +173,3 @@ services:
 
 volumes:
   mariadb_data:
-  letsencrypt-data:

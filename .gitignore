@@ -1,2 +1,5 @@
 # Local environment overrides
 .env
+
+# Traefik Letsencrypt data (host bind mount)
+letsencrypt/
