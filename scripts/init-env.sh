@@ -24,7 +24,7 @@ cat > "$ENV_FILE" <<EOF
 # Server identity
 DOMAIN=${DOMAIN_DEFAULT}
 RO_SERVER_NAME=Botland
-SET_MOTD=Botland Server
+SET_MOTD='Botland Server'
 
 # rAthena credentials and naming
 RATHENA_USR=${RATHENA_USR_DEFAULT}
