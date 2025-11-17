@@ -3,3 +3,6 @@
 
 # Traefik Letsencrypt data (host bind mount)
 letsencrypt/
+
+# Ignore extracted SQL initialization folder
+sql-init/
