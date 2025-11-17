@@ -14,6 +14,7 @@ help:
 	@printf "  %-28s %s\n" "make run"               "Start services and show logs (Ctrl+C to stop)"
 	@printf "  %-28s %s\n" "make down"              "Stop the rAthena services and remove volumes"
 	@printf "  %-28s %s\n" "make logs"              "Show logs from all services"
+	@printf "  %-28s %s\n" "make follow"            "Show logs and follow (streaming)"
 	@printf "  %-28s %s\n" "make clean"             "Remove generated files (logs, SQL)"
 	@printf "  %-28s %s\n" "make help"              "Show this help message"
 
@@ -54,6 +55,11 @@ init-db:
 up:
 	@echo "Starting rAthena services..."
 	docker compose up --detach
+
+# Start services (foreground) and show logs
+run:
+	@echo "Starting rAthena services (foreground)..."
+	docker compose up
 
 # Stop services
 down:
