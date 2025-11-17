@@ -8,17 +8,8 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 echo "[SQL Extract] Extracting SQL initialization files from rAthena image..."
-
-# Prepare directory for SQL files (keep directory to avoid deleting tracked files)
 mkdir -p ./sql-init
-
-# Remove only previously extracted SQL files from the directory, preserving
-# any tracked files like .gitkeep so Git doesn't see deletions.
-shopt -s nullglob
-for f in ./sql-init/*.sql; do
-    rm -f -- "$f"
-done
-shopt -u nullglob
+find ./sql-init/ -delete
 
 # Create a temporary container to extract SQL files
 echo "[SQL Extract] Creating temporary container..."

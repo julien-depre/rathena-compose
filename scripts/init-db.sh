@@ -37,9 +37,6 @@ while [ "$timeout" -gt 0 ]; do
   ((timeout--))
 done
 
-# cleanup sql-init directory
-rm -rf sql-init
-
 sleep 1
 docker compose down --remove-orphans
 

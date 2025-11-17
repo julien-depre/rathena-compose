@@ -7,17 +7,6 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$PROJECT_ROOT"
 
-echo "[Clean] Purging generated files and directories..."
-
-# Remove SQL initialization files
-if [ -d ./sql-init ]; then
-    echo "[Clean] Removing SQL files..."
-    rm -rf ./sql-init
-    echo "  ✓ sql-init/ removed"
-else
-    echo "  ✓ sql-init/ (already clean)"
-fi
-
 # Remove Docker container/volume/network
 echo "[Clean] Stopping and removing Docker containers, volumes, and networks..."
 docker compose down --volumes --remove-orphans
