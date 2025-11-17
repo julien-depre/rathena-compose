@@ -19,8 +19,8 @@ help:
 	@printf "  %-28s %s\n" "make help"              "Show this help message"
 
 # Initialize project: build images and extract SQL files
-init: init-env build extract-sql init-sql-override init-db
-	@echo "Initialization complete! Run 'make up' to start services."
+init: init-env build extract-sql init-sql-override init-db up init-fluxcp
+	@echo "Initialization complete! rAthena services are up."
 
 # Reset everything: clean, stop services, and reinitialize
 reset: clean init
@@ -50,6 +50,11 @@ init-sql-override:
 init-db:
 	@echo "Initializing database..."
 	@./scripts/init-db.sh
+
+# Initialize FluxCP database
+init-fluxcp:
+	@echo "Initializing FluxCP database..."
+	@./scripts/init-fluxcp.sh
 
 # Start services (detached)
 up:
